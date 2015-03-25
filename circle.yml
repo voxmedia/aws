@@ -1,0 +1,7 @@
+dependencies:
+  override:
+    - pip install pyvows coverage tornado_pyvows thumbor boto py-dateutil moto
+
+test:
+  override:
+    - pyvows -c -l thumbor_aws

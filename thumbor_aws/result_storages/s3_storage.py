@@ -36,8 +36,8 @@ class Storage(BaseStorage):
         file_key.key = file_abspath
 
         file_key.set_contents_from_string(bytes,
-            encrypt_key = self.context.config.get('S3_STORAGE_SSE', default=False),
-            reduced_redundancy = self.context.config.get('S3_STORAGE_RRS', default=False)
+            encrypt_key = self.context.config.S3_STORAGE_SSE,
+            reduced_redundancy = self.context.config.S3_STORAGE_RRS
         )
 
     def get(self):
@@ -51,12 +51,11 @@ class Storage(BaseStorage):
         return file_key.read()
 
     def normalize_path(self, path):
-        root_path = self.context.config.get('RESULT_STORAGE_AWS_STORAGE_ROOT_PATH', default='thumbor/result_storage/')
+        root_path = self.context.config.RESULT_STORAGE_AWS_STORAGE_ROOT_PATH
         path_segments = [path]
         if self.is_auto_webp:
             path_segments.append("webp")
-        digest = hashlib.sha1(".".join(path_segments).encode('utf-8')).hexdigest()
-        return os.path.join(root_path, digest)
+        return os.path.join(root_path, *path_segments)
 
     def is_expired(self, key):
         if key:

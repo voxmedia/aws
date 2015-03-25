@@ -7,12 +7,12 @@ connection = None
 def get_connection(context):
     conn = connection
     if conn is None:
-        if context.config.get('AWS_ROLE_BASED_CONNECTION', default=False):
+        if context.config.AWS_ROLE_BASED_CONNECTION:
             conn = S3Connection()
         else:
             conn = S3Connection(
-                context.config.get('AWS_ACCESS_KEY'),
-                context.config.get('AWS_SECRET_KEY')
+                context.config.AWS_ACCESS_KEY,
+                context.config.AWS_SECRET_KEY
             )
 
     return conn
