@@ -7,5 +7,5 @@ test:
   override:
     - pyvows -c -l thumbor_aws
   post:
-    - fpm -s python -t deb --iteration 1 --python-install-lib /usr/lib/python2.7/dist-packages -x "*.pyc" ./setup.py
+    - fpm -s python -t deb --iteration 1 --no-python-dependencies --python-install-lib /usr/lib/python2.7/dist-packages -x "*.pyc" ./setup.py
     - mv ./*.deb $CIRCLE_ARTIFACTS
