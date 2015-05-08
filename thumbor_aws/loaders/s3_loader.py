@@ -2,6 +2,7 @@
 
 from boto.s3.bucket import Bucket
 from boto.s3.key import Key
+from tornado.concurrent import return_future
 import urllib2
 
 import thumbor_aws.connection
@@ -29,7 +30,7 @@ def _validate_bucket(context,bucket):
 
     return False
 
-
+@return_future
 def load(context, url, callback):
     
     enable_http_loader = context.config.get('AWS_ENABLE_HTTP_LOADER', default=False)
