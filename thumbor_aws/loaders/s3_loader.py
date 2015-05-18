@@ -36,7 +36,8 @@ def load(context, url, callback):
     enable_http_loader = context.config.get('AWS_ENABLE_HTTP_LOADER', default=False)
 
     if enable_http_loader and 'http' in url:
-        return http_loader.load(context, url, callback)
+        http_loader.load(context, url, callback)
+        return
       
     url = urllib2.unquote(url)
     
