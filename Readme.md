@@ -1,6 +1,14 @@
 Thumbor AWS
 ===========
 
+Origin story
+------------
+
+This is a fork of https://github.com/willtrking/thumbor_aws ; as this repository was not maintained anymore, we decided to maintain it under the ``thumbor-community`` organisation.
+
+Features
+--------
+
  * thumbor_aws.loaders.s3_loader
  * thumbor_aws.result_storages.s3_storage
  * thumbor_aws.storages.s3_storage
