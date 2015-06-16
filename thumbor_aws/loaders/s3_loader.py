@@ -21,6 +21,14 @@ def _get_bucket(url):
     return bucket_name, bucket_path
 
 
+def _normalize_url(url):
+    """
+    :param url:
+    :return: exactly the same url since we only use http loader if url stars with http prefix.
+    """
+    return url
+
+
 def _validate_bucket(context, bucket):
     allowed_buckets = context.config.get('S3_ALLOWED_BUCKETS', default=None)
     return not allowed_buckets or bucket in allowed_buckets
@@ -30,9 +38,8 @@ def _validate_bucket(context, bucket):
 def load(context, url, callback):
     enable_http_loader = context.config.get('AWS_ENABLE_HTTP_LOADER', default=False)
 
-    if enable_http_loader and 'http' in url:
-        http_loader.load(context, url, callback)
-        return
+    if enable_http_loader and url.startswith('http'):
+        return http_loader.load_sync(context, url, callback, normalize_url_func=_normalize_url)
 
     url = urllib2.unquote(url)
 
