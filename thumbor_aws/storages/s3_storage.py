@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import hashlib
 from json import loads, dumps
 
-from os.path import splitext
+from os.path import splitext, join
 
 from thumbor.storages import BaseStorage
 from thumbor.utils import logger
@@ -36,8 +36,8 @@ class Storage(BaseStorage):
         file_key.key = file_abspath
 
         file_key.set_contents_from_string(bytes,
-            encrypt_key = self.context.config.get('S3_STORAGE_SSE', default=False),
-            reduced_redundancy = self.context.config.get('S3_STORAGE_RRS', default=False)
+            encrypt_key = self.context.config.S3_STORAGE_SSE,
+            reduced_redundancy = self.context.config.S3_STORAGE_RRS
         )
 
         return path
@@ -57,8 +57,8 @@ class Storage(BaseStorage):
         file_key.key = crypto_path
 
         file_key.set_contents_from_string(self.context.server.security_key,
-            encrypt_key = self.context.config.get('S3_STORAGE_SSE', default=False),
-            reduced_redundancy = self.context.config.get('S3_STORAGE_RRS', default=False)
+            encrypt_key = self.context.config.S3_STORAGE_SSE,
+            reduced_redundancy = self.context.config.S3_STORAGE_RRS
         )
 
         return crypto_path
@@ -72,8 +72,8 @@ class Storage(BaseStorage):
         file_key.key = path
 
         file_key.set_contents_from_string(dumps(data),
-            encrypt_key = self.context.config.get('S3_STORAGE_SSE', default=False),
-            reduced_redundancy = self.context.config.get('S3_STORAGE_RRS', default=False)
+            encrypt_key = self.context.config.S3_STORAGE_SSE,
+            reduced_redundancy = self.context.config.S3_STORAGE_RRS
         )
 
         return path
@@ -119,12 +119,14 @@ class Storage(BaseStorage):
         return True
 
     def normalize_path(self, path):
-        digest = hashlib.sha1(path.encode('utf-8')).hexdigest()
-        return "thumbor/storage/"+digest
+        root_path = self.context.config.RESULT_STORAGE_AWS_STORAGE_ROOT_PATH
+        path_segments = [path]
+        return join(root_path, *path_segments)
+
 
     def is_expired(self, key):
         if key:
-            expire_in_seconds = self.context.config.get('RESULT_STORAGE_EXPIRATION_SECONDS', None)
+            expire_in_seconds = self.context.config.RESULT_STORAGE_EXPIRATION_SECONDS
 
             #Never expire
             if expire_in_seconds is None or expire_in_seconds == 0:
@@ -151,3 +153,6 @@ class Storage(BaseStorage):
         local_dt = datetime.fromtimestamp(timestamp)
         assert utc_dt.resolution >= timedelta(microseconds=1)
         return local_dt.replace(microsecond=utc_dt.microsecond)
+
+    def resolve_original_photo_path(self,filename):
+        return filename
