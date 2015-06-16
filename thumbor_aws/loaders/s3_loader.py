@@ -1,11 +1,13 @@
 # coding: utf-8
 
 from boto.s3.bucket import Bucket
-from boto.s3.key import Key
+from thumbor.utils import logger
+from tornado.concurrent import return_future
 import urllib2
 
 import thumbor_aws.connection
 import thumbor.loaders.http_loader as http_loader
+
 
 def _get_bucket(url):
     """
@@ -18,41 +20,47 @@ def _get_bucket(url):
     bucket_path = "/".join(url_by_piece[1:])
     return bucket_name, bucket_path
 
-def _validate_bucket(context,bucket):
-    if not context.config.S3_ALLOWED_BUCKETS:
-        return True
 
-    for allowed in context.config.S3_ALLOWED_BUCKETS:
-        #s3 is case sensitive
-        if allowed == bucket:
-            return True
-
-    return False
+def _normalize_url(url):
+    """
+    :param url:
+    :return: exactly the same url since we only use http loader if url stars with http prefix.
+    """
+    return url
 
 
+def _validate_bucket(context, bucket):
+    allowed_buckets = context.config.get('S3_ALLOWED_BUCKETS', default=None)
+    return not allowed_buckets or bucket in allowed_buckets
+
+
+@return_future
 def load(context, url, callback):
-    
     enable_http_loader = context.config.get('AWS_ENABLE_HTTP_LOADER', default=False)
 
-    if enable_http_loader and 'http' in url:
-        return http_loader.load(context, url, callback)
-      
+    if enable_http_loader and url.startswith('http'):
+        return http_loader.load_sync(context, url, callback, normalize_url_func=_normalize_url)
+
     url = urllib2.unquote(url)
-    
-    if context.config.S3_LOADER_BUCKET:
-        bucket = context.config.S3_LOADER_BUCKET
-    else:
+
+    bucket = context.config.get('S3_LOADER_BUCKET', default=None)
+
+    if not bucket:
         bucket, url = _get_bucket(url)
-        if not _validate_bucket(context, bucket):
-            return callback(None)
 
-    bucket_loader = Bucket(
-        connection=thumbor_aws.connection.get_connection(context),
-        name=bucket
-    )
+    if _validate_bucket(context, bucket):
+        bucket_loader = Bucket(
+            connection=thumbor_aws.connection.get_connection(context),
+            name=bucket
+        )
+        file_key = None
+        try:
+            file_key = bucket_loader.get_key(url)
+        except Exception, e:
+            logger.warn("ERROR retrieving image from S3 {0}: {1}".format(url, str(e)))
 
-    file_key = bucket_loader.get_key(url)
-    if not file_key:
-        return callback(None)
+        if file_key:
+            callback(file_key.read())
+            return
 
-    return callback(file_key.read())
+    callback(None)
