@@ -52,6 +52,7 @@ class Storage(BaseStorage):
 
     def normalize_path(self, path):
         root_path = self.context.config.RESULT_STORAGE_AWS_STORAGE_ROOT_PATH
+        path = path.lstrip('/')  # Remove leading '/'
         path_segments = [path]
         if self.is_auto_webp:
             path_segments.append("webp")
