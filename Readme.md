@@ -11,9 +11,9 @@ This is a fork of https://github.com/willtrking/thumbor_aws ; as this repository
 Features
 --------
 
- * thumbor_aws.loaders.s3_loader
- * thumbor_aws.result_storages.s3_storage
- * thumbor_aws.storages.s3_storage
+ * tc_aws.loaders.s3_loader
+ * tc_aws.result_storages.s3_storage
+ * tc_aws.storages.s3_storage
 
 Additional Configuration values used:
 
@@ -49,6 +49,6 @@ Additional Configuration values used:
 
     #Optional config value to enable the HTTP loader
     #This would allow you to load watermarks in over your images dynamically through a URI
-    #E.g. 
+    #E.g.
     #http://your-thumbor.com/unsafe/filters:watermark(http://example.com/watermark.png,0,0,50)/s3_bucket/photo.jpg
     AWS_ENABLE_HTTP_LOADER = True or False (Default: False)

@@ -23,7 +23,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from moto import mock_s3
 
-from thumbor_aws.storages.s3_storage import Storage
+from tc_aws.storages.s3_storage import Storage
 
 s3_bucket = 'thumbor-images-test'
 
