@@ -14,7 +14,7 @@ from boto.s3.bucket import Bucket
 from boto.s3.key import Key
 from dateutil.parser import parse as parse_ts
 
-import thumbor_aws.connection
+import tc_aws.connection
 
 class Storage(BaseStorage):
 
@@ -25,7 +25,7 @@ class Storage(BaseStorage):
 
     def __get_s3_bucket(self):
         return Bucket(
-            connection=thumbor_aws.connection.get_connection(self.context),
+            connection=tc_aws.connection.get_connection(self.context),
             name=self.context.config.STORAGE_BUCKET
         )
 

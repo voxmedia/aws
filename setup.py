@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(
-	name = 'thumbor_aws',
+	name = 'tc_aws',
 	version = "1",
 	description = 'Thumbor AWS extensions',
 	author = 'William King',
