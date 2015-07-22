@@ -3,6 +3,13 @@ Thumbor AWS
 
 [![Circle CI](https://circleci.com/gh/thumbor-community/aws.svg?style=svg)](https://circleci.com/gh/thumbor-community/aws)
 
+Installation
+------------
+
+```bash
+pip install tc_aws
+```
+
 Origin story
 ------------
 
