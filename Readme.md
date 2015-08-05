@@ -59,3 +59,12 @@ Additional Configuration values used:
     #E.g.
     #http://your-thumbor.com/unsafe/filters:watermark(http://example.com/watermark.png,0,0,50)/s3_bucket/photo.jpg
     AWS_ENABLE_HTTP_LOADER = True or False (Default: False)
+
+
+    # Optional additional configuration for the Boto-Client used to access S3.
+    # see http://boto.readthedocs.org/en/latest/ref/s3.html?highlight=boto.s3.connection.s3connection#boto.s3.connection.S3Connection
+    # for all available config options
+    BOTO_CONFIG = {
+        'host': 'fakes3.local.dev',
+        'is_secure': False
+        }
