@@ -29,7 +29,8 @@ Additional Configuration values used:
     # list of allowed buckets for the s3_loader
     S3_ALLOWED_BUCKETS = []
 
-
+    # alternatively: set a fixed bucket, no need for bucket name in Image-Path
+    S3_LOADER_BUCKET = 'thumbor-images'
 
     # configuration settings specific for the storages
 
