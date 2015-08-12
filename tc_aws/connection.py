@@ -5,8 +5,8 @@ from boto.s3.connection import S3Connection
 connection = None
 
 def get_connection(context):
-    conn = connection
-    if conn is None:
+
+    if connection is None:
         boto_opts = {}
 
         if context.config.AWS_ROLE_BASED_CONNECTION==False:
@@ -18,6 +18,6 @@ def get_connection(context):
         if context.config.BOTO_CONFIG:
             boto_opts.update(context.config.BOTO_CONFIG)
 
-        conn = S3Connection(**boto_opts)
+        connection = S3Connection(**boto_opts)
 
-    return conn
+    return connection
