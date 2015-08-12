@@ -5,6 +5,7 @@ from boto.s3.connection import S3Connection
 connection = None
 
 def get_connection(context):
+    global connection
 
     if connection is None:
         boto_opts = {}
