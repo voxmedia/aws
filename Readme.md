@@ -7,13 +7,14 @@ Installation
 ------------
 
 ```bash
-pip install tc_aws
+    pip install tc_aws
 ```
 
 Origin story
 ------------
 
-This is a fork of https://github.com/willtrking/thumbor_aws ; as this repository was not maintained anymore, we decided to maintain it under the ``thumbor-community`` organisation.
+This is a fork of https://github.com/willtrking/thumbor_aws ; as this repository was not maintained anymore, 
+we decided to maintain it under the ``thumbor-community`` organisation.
 
 Features
 --------
@@ -29,6 +30,9 @@ Additional Configuration values used:
     # the Amazon Web Services secret of the used access key
     AWS_SECRET_KEY = ""
 
+    # Alternatively (recommended), use Role-based connection
+    # http://docs.aws.amazon.com/IAM/latest/UserGuide/roles-assume-role.html
+    AWS_ROLE_BASED_CONNECTION = True or False (Default: False)
 
 
     # configuration settings specific for the s3_loader
@@ -38,8 +42,19 @@ Additional Configuration values used:
 
     # alternatively: set a fixed bucket, no need for bucket name in Image-Path
     S3_LOADER_BUCKET = 'thumbor-images'
+    # A root path for loading images, useful if you share the bucket
+    S3_LOADER_ROOT_PATH = 'source-images'
 
     # configuration settings specific for the storages
+
+    STORAGE_BUCKET = 'thumbor-images'
+    # A root path for the storage, useful if you share a bucket for loading / storing
+    STORAGE_AWS_STORAGE_ROOT_PATH = 'storage'
+
+    RESULT_STORAGE_BUCKET = 'thumbor-images'
+    RESULT_STORAGE_AWS_STORAGE_ROOT_PATH = 'result'
+
+    STORAGE_EXPIRATION_SECONDS
 
     # put data into S3 using the Server Side Encryption functionality to
     # encrypt data at rest in S3
@@ -49,10 +64,6 @@ Additional Configuration values used:
     # put data into S3 with Reduced Redundancy
     # https://aws.amazon.com/about-aws/whats-new/2010/05/19/announcing-amazon-s3-reduced-redundancy-storage/
     S3_STORAGE_RRS = True or False (Default: False)
-
-    # Use Role-based connection
-    # http://docs.aws.amazon.com/IAM/latest/UserGuide/roles-assume-role.html
-    AWS_ROLE_BASED_CONNECTION = True or False (Default: False)
 
 
     #Optional config value to enable the HTTP loader
@@ -68,4 +79,4 @@ Additional Configuration values used:
     BOTO_CONFIG = {
         'host': 'fakes3.local.dev',
         'is_secure': False
-        }
+    }

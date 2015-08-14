@@ -119,9 +119,10 @@ class Storage(BaseStorage):
         return True
 
     def normalize_path(self, path):
-        root_path = self.context.config.RESULT_STORAGE_AWS_STORAGE_ROOT_PATH
-        path_segments = [path]
-        return join(root_path, *path_segments)
+        root_path = self.context.config.STORAGE_AWS_STORAGE_ROOT_PATH
+        path = path.lstrip('/')  # Remove leading '/'
+        path_segments = [root_path, path]
+        return join(*path_segments)
 
 
     def is_expired(self, key):

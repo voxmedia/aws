@@ -9,7 +9,7 @@ import tc_aws.connection
 import thumbor.loaders.http_loader as http_loader
 
 
-def _get_bucket(url):
+def _get_bucket(url, root_path=None):
     """
     Returns a tuple containing bucket name and bucket path.
     url: A string of the format /bucket.name/file/path/in/bucket
@@ -17,7 +17,10 @@ def _get_bucket(url):
 
     url_by_piece = url.lstrip("/").split("/")
     bucket_name = url_by_piece[0]
-    bucket_path = "/".join(url_by_piece[1:])
+
+    url_by_piece[0] = root_path
+    bucket_path = "/".join(*url_by_piece)
+
     return bucket_name, bucket_path
 
 
@@ -46,7 +49,7 @@ def load(context, url, callback):
     bucket = context.config.get('S3_LOADER_BUCKET', default=None)
 
     if not bucket:
-        bucket, url = _get_bucket(url)
+        bucket, url = _get_bucket(url, root_path=context.config.S3_LOADER_ROOT_PATH)
 
     if _validate_bucket(context, bucket):
         bucket_loader = Bucket(

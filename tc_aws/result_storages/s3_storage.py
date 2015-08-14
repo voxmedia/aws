@@ -40,6 +40,8 @@ class Storage(BaseStorage):
             reduced_redundancy = self.context.config.S3_STORAGE_RRS
         )
 
+        return file_abspath
+
     def get(self):
         file_abspath = self.normalize_path(self.context.request.url)
         file_key = self.storage.get_key(file_abspath)
