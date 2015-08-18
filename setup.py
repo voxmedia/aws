@@ -18,6 +18,7 @@ setup(
             'coverage',
             'tornado_pyvows',
             'moto',
+			'mock',
         ],
     },
 )
