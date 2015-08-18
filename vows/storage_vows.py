@@ -1,20 +1,9 @@
 #se!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# thumbor imaging service
-# https://github.com/globocom/thumbor/wiki
-
-# Licensed under the MIT license:
-# http://www.opensource.org/licenses/mit-license
-# Copyright (c) 2011 globo.com timehome@corp.globo.com
-
-
 from pyvows import Vows, expect
-from hashlib import md5
 
-from thumbor.app import ThumborServiceApp
-from thumbor.importer import Importer
-from thumbor.context import Context, ServerParameters
+from thumbor.context import Context
 from thumbor.config import Config
 from fixtures.storage_fixture import IMAGE_URL, IMAGE_BYTES, get_server
 import time
@@ -145,6 +134,20 @@ class S3StorageVows(Vows.Context):
 
     def should_return_the_same(self, topic):
       expect(topic).to_equal("toto")
+
+  class HandlesStoragePrefix(Vows.Context):
+    @mock_s3
+    def topic(self):
+      self.conn = S3Connection()
+      bucket = self.conn.create_bucket(s3_bucket)
+
+      config=Config(STORAGE_BUCKET=s3_bucket, STORAGE_AWS_STORAGE_ROOT_PATH='tata')
+      storage = Storage(Context(config=config, server=get_server('ACME-SEC')))
+
+      return storage.normalize_path('toto')
+
+    def should_return_the_same(self, topic):
+      expect(topic).to_equal("tata/toto")
 
   class CryptoVows(Vows.Context):
     class RaisesIfInvalidConfig(Vows.Context):
