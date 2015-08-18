@@ -1,7 +1,7 @@
 dependencies:
   override:
     - gem install fpm
-    - pip install pyvows coverage tornado_pyvows thumbor boto py-dateutil moto
+    - pip install pyvows coverage tornado_pyvows thumbor boto py-dateutil moto mock
 
 test:
   override:
