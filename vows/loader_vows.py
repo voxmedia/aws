@@ -34,11 +34,12 @@ class S3LoaderVows(Vows.Context):
 
       conf = Config()
       conf.define('S3_LOADER_BUCKET', s3_bucket, '')
+      conf.define('S3_LOADER_ROOT_PATH', 'root_path', '')
 
       return Context(config=conf)
 
     def should_load_from_s3(self, topic):
-      image = yield s3_loader.load(topic, IMAGE_PATH)
+      image = yield s3_loader.load(topic, '/'.join(['root_path', IMAGE_PATH]))
       expect(image).to_equal(IMAGE_BYTES)
 
   class ValidatesBuckets(Vows.Context):
