@@ -18,8 +18,12 @@ def _get_bucket(url, root_path=None):
     url_by_piece = url.lstrip("/").split("/")
     bucket_name = url_by_piece[0]
 
-    url_by_piece[0] = root_path
-    bucket_path = "/".join(*url_by_piece)
+    if root_path is not None:
+        url_by_piece[0] = root_path
+    else:
+        url_by_piece = url_by_piece[1:]
+
+    bucket_path = "/".join(url_by_piece)
 
     return bucket_name, bucket_path
 
