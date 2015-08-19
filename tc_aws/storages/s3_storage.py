@@ -6,12 +6,13 @@ from os.path import splitext
 
 from thumbor.storages import BaseStorage
 
-from tc_aws.aws.storage import AwsStorage
+from ..aws.storage import AwsStorage
 
-class Storage(BaseStorage, AwsStorage):
+class Storage(AwsStorage, BaseStorage):
+
     def __init__(self, context):
-        AwsStorage.__init__(self, context)
         BaseStorage.__init__(self, context)
+        AwsStorage.__init__(self, context, 'STORAGE')
 
     def put(self, path, bytes):
         self.set(bytes, self.normalize_path(path))
@@ -58,7 +59,7 @@ class Storage(BaseStorage, AwsStorage):
 
         file_key = self.storage.get_key(path)
 
-        if not file_key or self.is_expired(path):
+        if not file_key or self.is_expired(file_key):
             return None
 
         return loads(file_key.read())

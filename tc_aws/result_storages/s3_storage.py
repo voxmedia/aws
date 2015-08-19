@@ -2,12 +2,21 @@
 
 from thumbor.result_storages import BaseStorage
 
-from tc_aws.aws.storage import AwsStorage
+from ..aws.storage import AwsStorage
 
-class Storage(BaseStorage, AwsStorage):
+class Storage(AwsStorage, BaseStorage):
     def __init__(self, context):
-        AwsStorage.__init__(self, context)
         BaseStorage.__init__(self, context)
+        AwsStorage.__init__(self, context, 'RESULT_STORAGE')
 
     def put(self, bytes):
-        self.set(bytes, self.normalize_path(self.context.request.url))
+        path = self.normalize_path(self.context.request.url)
+        self.set(bytes, path)
+
+        return path
+
+    def get(self, path=None):
+        if path == None:
+            path=self.normalize_path(self.context.request.url)
+
+        return super(Storage, self).get(path)
