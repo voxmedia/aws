@@ -5,9 +5,9 @@ from thumbor.utils import logger
 from tornado.concurrent import return_future
 import urllib2
 
-import tc_aws.connection
 import thumbor.loaders.http_loader as http_loader
 
+from tc_aws.aws.connection import get_connection
 
 def _get_bucket(url, root_path=None):
     """
@@ -57,7 +57,7 @@ def load(context, url, callback):
 
     if _validate_bucket(context, bucket):
         bucket_loader = Bucket(
-            connection=tc_aws.connection.get_connection(context),
+            connection=get_connection(context),
             name=bucket
         )
         file_key = None

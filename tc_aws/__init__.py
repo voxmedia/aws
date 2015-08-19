@@ -1,7 +1,6 @@
 # coding: utf-8
+
 from thumbor.config import Config
-
-
 
 Config.define('STORAGE_BUCKET',                         'thumbor-images',   'S3 bucket for Storage', 'S3')
 Config.define('RESULT_STORAGE_BUCKET',                  'thumbor-result',   'S3 bucket for result Storage', 'S3')
