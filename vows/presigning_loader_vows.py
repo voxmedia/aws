@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import time # so we can override time.time
 
 mock_time = Mock()
-mock_time.return_value = time.mktime(datetime(2015, 8, 27).timetuple())
+mock_time.return_value = time.mktime(datetime(2015, 8, 27, 0, 0, 0, 0).timetuple())
 
 from thumbor.context import Context
 from derpconf.config import Config
