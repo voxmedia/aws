@@ -5,10 +5,15 @@ from mock import Mock
 from pyvows import Vows, expect
 from mock import patch
 from datetime import datetime, timedelta
+from dateutil import tz
 import time # so we can override time.time
 
+
+utc = datetime.utcfromtimestamp(1370438350)
+utc.replace(tzinfo=tz.gettz('UTC'))
+
 mock_time = Mock()
-mock_time.return_value = time.mktime(datetime.utcfromtimestamp(1370438350).timetuple())
+mock_time.return_value = time.mktime(utc.timetuple())
 
 from thumbor.context import Context
 from derpconf.config import Config
