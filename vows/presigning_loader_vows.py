@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import time # so we can override time.time
 
 mock_time = Mock()
-mock_time.return_value = time.mktime(datetime(2015, 8, 27, 0, 0, 0, 0).timetuple())
+mock_time.return_value = time.mktime(datetime.utcfromtimestamp(1370438350).timetuple())
 
 from thumbor.context import Context
 from derpconf.config import Config
@@ -76,5 +76,5 @@ class S3LoaderVows(Vows.Context):
     @patch('time.time', mock_time)
     def should_generate_presigned_urls(self, topic):
       url = presigning_loader._generate_presigned_url(topic, "bucket-name", "some-s3-key")
-      expected = 'https://bucket-name.s3.amazonaws.com/some-s3-key?Signature=VBvCc%2Fpn%2BgNCngFEUuJCiVw4CK8%3D&Expires=1440630000&AWSAccessKeyId=AKIAIL4O5PGEUV4YUDSA'
+      expected = 'https://bucket-name.s3.amazonaws.com/some-s3-key?Signature=mCNGqFLZMQuJtEr334XHmI5dEpY%3D&Expires=1370434750&AWSAccessKeyId=AKIAIL4O5PGEUV4YUDSA'
       expect(url).to_equal(expected)
