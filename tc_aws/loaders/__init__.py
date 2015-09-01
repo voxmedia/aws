@@ -2,6 +2,7 @@
 
 import urllib2
 
+
 def _get_bucket_and_key(context, url):
     url = urllib2.unquote(url)
 
@@ -45,4 +46,3 @@ def _normalize_url(url):
 def _validate_bucket(context, bucket):
     allowed_buckets = context.config.get('S3_ALLOWED_BUCKETS', default=None)
     return not allowed_buckets or bucket in allowed_buckets
-

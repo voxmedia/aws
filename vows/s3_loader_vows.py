@@ -1,4 +1,4 @@
-#se!/usr/bin/python
+# se!/usr/bin/python
 # -*- coding: utf-8 -*-
 from mock import Mock
 
@@ -19,48 +19,52 @@ from tc_aws.loaders import s3_loader
 
 s3_bucket = 'thumbor-images-test'
 
+
 @Vows.batch
 class S3LoaderVows(Vows.Context):
 
-  class CanLoadImage(Vows.Context):
-    @mock_s3
-    def topic(self):
-      conn = boto.connect_s3()
-      bucket = conn.create_bucket(s3_bucket)
+    class CanLoadImage(Vows.Context):
 
-      k = Key(bucket)
-      k.key = IMAGE_PATH
-      k.set_contents_from_string(IMAGE_BYTES)
+        @mock_s3
+        def topic(self):
+            conn = boto.connect_s3()
+            bucket = conn.create_bucket(s3_bucket)
 
-      conf = Config()
-      conf.define('S3_LOADER_BUCKET', s3_bucket, '')
-      conf.define('S3_LOADER_ROOT_PATH', 'root_path', '')
+            k = Key(bucket)
+            k.key = IMAGE_PATH
+            k.set_contents_from_string(IMAGE_BYTES)
 
-      return Context(config=conf)
+            conf = Config()
+            conf.define('S3_LOADER_BUCKET', s3_bucket, '')
+            conf.define('S3_LOADER_ROOT_PATH', 'root_path', '')
 
-    def should_load_from_s3(self, topic):
-      image = yield s3_loader.load(topic, '/'.join(['root_path', IMAGE_PATH]))
-      expect(image).to_equal(IMAGE_BYTES)
+            return Context(config=conf)
 
-  class ValidatesBuckets(Vows.Context):
-    def topic(self):
-      conf = Config()
-      conf.define('S3_ALLOWED_BUCKETS', [], '')
+        def should_load_from_s3(self, topic):
+            image = yield s3_loader.load(topic, '/'.join(['root_path', IMAGE_PATH]))
+            expect(image).to_equal(IMAGE_BYTES)
 
-      return Context(config=conf)
+    class ValidatesBuckets(Vows.Context):
 
-    def should_load_from_s3(self, topic):
-      image = yield s3_loader.load(topic, '/'.join([s3_bucket, IMAGE_PATH]))
-      expect(image).to_equal(None)
+        def topic(self):
+            conf = Config()
+            conf.define('S3_ALLOWED_BUCKETS', [], '')
 
-  class HandlesHttpLoader(Vows.Context):
-    def topic(self):
-      conf = Config()
-      conf.define('AWS_ENABLE_HTTP_LOADER', True, '')
+            return Context(config=conf)
 
-      return Context(config=conf)
+        def should_load_from_s3(self, topic):
+            image = yield s3_loader.load(topic, '/'.join([s3_bucket, IMAGE_PATH]))
+            expect(image).to_equal(None)
 
-    def should_redirect_to_http(self, topic):
-      with patch('thumbor.loaders.http_loader.load_sync') as mock_load_sync:
-        yield s3_loader.load(topic, 'http://foo.bar')
-        expect(mock_load_sync.called).to_be_true()
+    class HandlesHttpLoader(Vows.Context):
+
+        def topic(self):
+            conf = Config()
+            conf.define('AWS_ENABLE_HTTP_LOADER', True, '')
+
+            return Context(config=conf)
+
+        def should_redirect_to_http(self, topic):
+            with patch('thumbor.loaders.http_loader.load_sync') as mock_load_sync:
+                yield s3_loader.load(topic, 'http://foo.bar')
+                expect(mock_load_sync.called).to_be_true()
