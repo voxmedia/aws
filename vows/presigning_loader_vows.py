@@ -1,5 +1,8 @@
 # se!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+from urlparse import urlparse, parse_qs
+
 from mock import Mock
 
 from pyvows import Vows, expect
@@ -23,7 +26,6 @@ from fixtures.storage_fixture import IMAGE_PATH, IMAGE_BYTES
 from tc_aws.loaders import presigning_loader
 
 s3_bucket = 'thumbor-images-test'
-
 
 @Vows.batch
 class S3LoaderVows(Vows.Context):
@@ -51,6 +53,7 @@ class S3LoaderVows(Vows.Context):
 
     class ValidatesBuckets(Vows.Context):
 
+        @mock_s3
         def topic(self):
             conf = Config()
             conf.define('S3_ALLOWED_BUCKETS', [], '')
@@ -63,6 +66,7 @@ class S3LoaderVows(Vows.Context):
 
     class HandlesHttpLoader(Vows.Context):
 
+        @mock_s3
         def topic(self):
             conf = Config()
             return Context(config=conf)
@@ -74,6 +78,7 @@ class S3LoaderVows(Vows.Context):
 
     class CanBuildPresignedUrl(Vows.Context):
 
+        @mock_s3
         def topic(self):
             conf = Config()
             return Context(config=conf)
@@ -82,5 +87,12 @@ class S3LoaderVows(Vows.Context):
         def should_generate_presigned_urls(self, topic):
             url = presigning_loader._generate_presigned_url(
                 topic, "bucket-name", "some-s3-key")
-            expected = 'https://bucket-name.s3.amazonaws.com/some-s3-key?Signature=Z02q3AX5dNhL6Ov%2FECKDYtb2lGY%3D&Expires=1234890218&AWSAccessKeyId=AKIAIL4O5PGEUV4YUDSA'
-            expect(url).to_equal(expected)
+            url = urlparse(url)
+            expect(url.scheme).to_equal('https')
+            expect(url.hostname).to_equal('bucket-name.s3.amazonaws.com')
+            expect(url.path).to_equal('/some-s3-key')
+            url_params = parse_qs(url.query)
+            expect(url_params['Expires'][0]).to_equal('1234890218')
+            expect(url_params['Signature'][0]).to_equal('Q2muVVF3eGe5sgjceFqQNrm1ues=')
+            expect(url_params['x-amz-security-token'][0]).to_equal('test-session-token')
+            expect(url_params['AWSAccessKeyId'][0]).to_equal('test-key')
