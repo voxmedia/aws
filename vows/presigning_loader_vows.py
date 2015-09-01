@@ -7,8 +7,6 @@ from mock import Mock
 
 from pyvows import Vows, expect
 from mock import patch
-from datetime import datetime, timedelta
-from dateutil import tz
 import time  # so we can override time.time
 mock_time = Mock()
 mock_time.return_value = time.mktime((2009, 2, 17, 17, 3, 38, 1, 48, 0))
@@ -92,7 +90,8 @@ class S3LoaderVows(Vows.Context):
             expect(url.hostname).to_equal('bucket-name.s3.amazonaws.com')
             expect(url.path).to_equal('/some-s3-key')
             url_params = parse_qs(url.query)
-            expect(url_params['Expires'][0]).to_equal('1234890218')
+            expires = int(time.mktime((2009, 2, 17, 17, 3, 38, 1, 48, 0)) + 60*60)
+            expect(int(url_params['Expires'][0])).to_equal(expires)
             expect(url_params['Signature'][0]).to_equal('Q2muVVF3eGe5sgjceFqQNrm1ues=')
             expect(url_params['x-amz-security-token'][0]).to_equal('test-session-token')
             expect(url_params['AWSAccessKeyId'][0]).to_equal('test-key')
