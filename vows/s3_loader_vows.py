@@ -72,3 +72,12 @@ class S3LoaderVows(Vows.Context):
 
             s3_loader.load_sync(topic, 'http://foo.bar', callback)
             expect(load_sync_patch.called).to_be_true()
+
+        @mock_s3
+        @patch('thumbor.loaders.http_loader.load_sync')
+        def should_not_redirect_to_http_if_not_prefixed_with_scheme(self, topic, load_sync_patch):
+            def callback(*args):
+                pass
+
+            s3_loader.load_sync(topic, 'foo.bar', callback)
+            expect(load_sync_patch.called).to_be_false()
