@@ -78,11 +78,11 @@ class PresigningLoaderVows(Vows.Context):
 
     class CanBuildPresignedUrl(Vows.Context):
 
-        @mock_s3
         def topic(self):
             conf = Config()
             return Context(config=conf)
 
+        @mock_s3
         def should_generate_presigned_urls(self, topic):
             url = presigning_loader._generate_presigned_url(
                 topic, "bucket-name", "some-s3-key")
@@ -95,3 +95,4 @@ class PresigningLoaderVows(Vows.Context):
             expect(url_params).to_include('Expires')
             expect(url_params).to_include('Signature')
             expect(url_params['AWSAccessKeyId'][0]).to_equal('test-key')
+            expect(url_params['x-amz-security-token'][0]).to_equal('test-session-token')
