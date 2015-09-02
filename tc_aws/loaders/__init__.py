@@ -1,4 +1,5 @@
 # coding: utf-8
+__all__ = ['_get_bucket_and_key', '_get_bucket', '_normalize_url', '_validate_bucket', '_use_http_loader']
 
 import urllib2
 
@@ -46,3 +47,8 @@ def _normalize_url(url):
 def _validate_bucket(context, bucket):
     allowed_buckets = context.config.get('S3_ALLOWED_BUCKETS', default=None)
     return not allowed_buckets or bucket in allowed_buckets
+
+
+def _use_http_loader(context, url):
+    enable_http_loader = context.config.get('AWS_ENABLE_HTTP_LOADER', default=False)
+    return enable_http_loader and url.startswith('http')

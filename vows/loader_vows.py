@@ -3,7 +3,6 @@
 from mock import Mock
 
 from pyvows import Vows, expect
-from mock import patch
 
 from thumbor.context import Context
 from derpconf.config import Config
@@ -15,7 +14,7 @@ from moto import mock_s3
 
 from fixtures.storage_fixture import IMAGE_PATH, IMAGE_BYTES
 
-from tc_aws.loaders import _get_bucket, _normalize_url, _get_bucket_and_key
+from tc_aws.loaders import *
 
 s3_bucket = 'thumbor-images-test'
 

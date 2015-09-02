@@ -16,6 +16,7 @@ from moto import mock_s3
 from fixtures.storage_fixture import IMAGE_PATH, IMAGE_BYTES
 
 from tc_aws.loaders import s3_loader
+import thumbor.loaders.http_loader
 
 s3_bucket = 'thumbor-images-test'
 
@@ -64,7 +65,10 @@ class S3LoaderVows(Vows.Context):
 
             return Context(config=conf)
 
-        def should_redirect_to_http(self, topic):
-            with patch('thumbor.loaders.http_loader.load_sync') as mock_load_sync:
-                yield s3_loader.load(topic, 'http://foo.bar')
-                expect(mock_load_sync.called).to_be_true()
+        @patch('thumbor.loaders.http_loader.load_sync')
+        def should_redirect_to_http(self, topic, load_sync_patch):
+            def callback(*args):
+                pass
+
+            s3_loader.load_sync(topic, 'http://foo.bar', callback)
+            expect(load_sync_patch.called).to_be_true()

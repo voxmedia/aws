@@ -6,6 +6,7 @@ from tornado.concurrent import return_future
 
 import thumbor.loaders.http_loader as http_loader
 
+from tc_aws.loaders import *
 from tc_aws.aws.connection import get_connection
 
 
@@ -23,6 +24,12 @@ def _generate_presigned_url(context, bucket, key):
 
 @return_future
 def load(context, url, callback):
+    load_sync(context, url, callback)
+
+def load_sync(context, url, callback):
+    if _use_http_loader(context, url):
+        return http_loader.load_sync(context, url, callback, normalize_url_func=_normalize_url)
+
     bucket, key = _get_bucket_and_key(context, url)
 
     if _validate_bucket(context, bucket):

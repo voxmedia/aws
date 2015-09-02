@@ -6,14 +6,16 @@ from tornado.concurrent import return_future
 
 import thumbor.loaders.http_loader as http_loader
 
+from tc_aws.loaders import *
 from tc_aws.aws.connection import get_connection
 
 
 @return_future
 def load(context, url, callback):
-    enable_http_loader = context.config.get('AWS_ENABLE_HTTP_LOADER', default=False)
+    load_sync(context, url, callback)
 
-    if enable_http_loader and url.startswith('http'):
+def load_sync(context, url, callback):
+    if _use_http_loader(context, url):
         return http_loader.load_sync(context, url, callback, normalize_url_func=_normalize_url)
 
     bucket, key = _get_bucket_and_key(context, url)

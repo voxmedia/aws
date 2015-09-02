@@ -23,7 +23,7 @@ from tc_aws.loaders import presigning_loader
 s3_bucket = 'thumbor-images-test'
 
 @Vows.batch
-class S3LoaderVows(Vows.Context):
+class PresigningLoaderVows(Vows.Context):
 
     class CanLoadImage(Vows.Context):
 
@@ -64,12 +64,17 @@ class S3LoaderVows(Vows.Context):
         @mock_s3
         def topic(self):
             conf = Config()
+            conf.define('AWS_ENABLE_HTTP_LOADER', True, '')
+
             return Context(config=conf)
 
-        def should_redirect_to_http(self, topic):
-            with patch('thumbor.loaders.http_loader.load_sync') as mock_load_sync:
-                yield presigning_loader.load(topic, 'http://foo.bar')
-                expect(mock_load_sync.called).to_be_true()
+        @patch('thumbor.loaders.http_loader.load_sync')
+        def should_redirect_to_http(self, topic, load_sync_patch):
+            def callback(*args):
+                pass
+
+            presigning_loader.load_sync(topic, 'http://foo.bar', callback)
+            expect(load_sync_patch.called).to_be_true()
 
     class CanBuildPresignedUrl(Vows.Context):
 
@@ -89,5 +94,4 @@ class S3LoaderVows(Vows.Context):
             # We can't test Expires & Signature values as they vary depending on the TZ
             expect(url_params).to_include('Expires')
             expect(url_params).to_include('Signature')
-            expect(url_params['x-amz-security-token'][0]).to_equal('test-session-token')
             expect(url_params['AWSAccessKeyId'][0]).to_equal('test-key')
