@@ -11,4 +11,4 @@ setup:
 	@pip install -e .[tests] --quiet
 
 test: setup
-	AWS_ACCESS_KEY_ID=test-key pyvows -c -l tc_aws
+	@pyvows -c -l tc_aws
