@@ -61,7 +61,7 @@ class Storage(BaseStorage):
     def is_expired(self, key):
         if key:
             timediff = datetime.now() - self.utc_to_local(parse_ts(key.last_modified))
-            return timediff.seconds > self.context.config.STORAGE_EXPIRATION_SECONDS
+            return timediff.seconds > self.context.config.RESULT_STORAGE_EXPIRATION_SECONDS
         else:
             #If our key is bad just say we're expired
             return True

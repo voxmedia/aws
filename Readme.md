@@ -1,19 +1,33 @@
-Thumbor AWS
-===========
-
-[![Circle CI](https://circleci.com/gh/thumbor-community/aws.svg?style=svg)](https://circleci.com/gh/thumbor-community/aws)
+Thumbor AWS (forked)
+====================
 
 Installation
 ------------
 
 ```bash
-pip install tc_aws
+pip install git+git://github.com/voxmedia/aws@patched
 ```
 
-Origin story
-------------
+Origin story REDUX
+------------------
 
-This is a fork of https://github.com/willtrking/thumbor_aws ; as this repository was not maintained anymore, we decided to maintain it under the ``thumbor-community`` organisation.
+This is a fork of https://github.com/thumbor-community/aws ; which
+wasn't working for our setup, when we tried replacing the PyPI version
+of tc-aws (which *also* wasn't working) with this one.
+
+That repo is itself a fork of https://github.com/willtrking/thumbor_aws ; as this
+repository was not maintained anymore, we decided to maintain it under
+the ``thumbor-community`` organisation.
+
+The relevant branch (`patched`) is forked from the originally-tagged
+v1.1.0 release, because there was a substantial refactoring after that,
+which was causing the latest `master` version to not be usable (at
+least without more work).
+
+This currently interacts with S3 almost-perfectly (in terms of saving
+files in the right place), but doesn't seem to actually be performing
+the requested transformation on the image before it saves the
+result. :/
 
 Features
 --------
@@ -24,7 +38,7 @@ Features
 
 Additional Configuration values used:
 
-	# the Amazon Web Services access key to use
+  # the Amazon Web Services access key to use
     AWS_ACCESS_KEY = ""
     # the Amazon Web Services secret of the used access key
     AWS_SECRET_KEY = ""
