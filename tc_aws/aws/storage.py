@@ -38,6 +38,10 @@ class AwsStorage():
         file_key=Key(self.storage)
         file_key.key=abspath
 
+        if self.context.config.S3_STORE_METADATA:
+            for k, v in self.context.request_handler._headers.iteritems():
+                file_key.set_metadata(k, v)
+
         file_key.set_contents_from_string(bytes,
             encrypt_key=self.context.config.get('S3_STORAGE_SSE', ''),         #TODO: fix config prefix
             reduced_redundancy=self.context.config.get('S3_STORAGE_RRS', '')   #TODO: fix config prefix
@@ -51,7 +55,6 @@ class AwsStorage():
         if not file_key or self.is_expired(file_key):
             logger.debug("[STORAGE] s3 key not found at %s" % file_abspath)
             return None
-
         return file_key.read()
 
     def normalize_path(self, path):
