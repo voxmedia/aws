@@ -71,7 +71,7 @@ class S3ResultStorageVows(Vows.Context):
       self.conn = S3Connection()
       self.conn.create_bucket(s3_bucket)
 
-      config = Config(RESULT_STORAGE_BUCKET=s3_bucket, S3_STORE_METADATA=True)
+      config = Config(RESULT_STORAGE_BUCKET=s3_bucket, RESULT_STORAGE_S3_STORE_METADATA=True)
       ctx = Context(config=config, server=get_server('ACME-SEC'))
       ctx.request_handler = RequestHandler()
       ctx.request = Request

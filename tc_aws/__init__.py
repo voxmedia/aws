@@ -15,7 +15,7 @@ Config.define('STORAGE_EXPIRATION_SECONDS',             3600,               'S3 
 Config.define('S3_STORAGE_SSE',                         False,              'S3 encriptipon key', 'S3')
 Config.define('S3_STORAGE_RRS',                         False,              'S3 redundency', 'S3')
 Config.define('S3_ALLOWED_BUCKETS',                     False,              'List of allowed bucket to be requeted', 'S3')
-Config.define('S3_STORE_METADATA',                      False,              'S3 store result with metadata', 'S3')
+Config.define('RESULT_STORAGE_S3_STORE_METADATA',       False,              'S3 store result with metadata', 'S3')
 
 Config.define('AWS_ACCESS_KEY',                         None,               'AWS Access key, if None use environment AWS_ACCESS_KEY_ID', 'AWS')
 Config.define('AWS_SECRET_KEY',                         None,               'AWS Secret key, if None use environment AWS_SECRET_ACCESS_KEY', 'AWS')
