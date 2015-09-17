@@ -14,6 +14,7 @@ from dateutil.parser import parse as parse_ts
 
 from connection import get_connection
 
+
 class AwsStorage():
 
     @property
@@ -25,7 +26,7 @@ class AwsStorage():
         self.context = context
         self.storage = self.__get_s3_bucket()
 
-    def _get_config(self, config_key, default = None):
+    def _get_config(self, config_key, default=None):
         return getattr(self.context.config, '%s_%s' % (self.config_prefix, config_key))
 
     def __get_s3_bucket(self):
@@ -35,16 +36,17 @@ class AwsStorage():
         )
 
     def set(self, bytes, abspath):
-        file_key=Key(self.storage)
-        file_key.key=abspath
+        file_key = Key(self.storage)
+        file_key.key = abspath
 
         if self.config_prefix is 'RESULT_STORAGE' and self._get_config('S3_STORE_METADATA'):
             for k, v in self.context.request_handler._headers.iteritems():
                 file_key.set_metadata(k, v)
 
-        file_key.set_contents_from_string(bytes,
-            encrypt_key=self.context.config.get('S3_STORAGE_SSE', ''),         #TODO: fix config prefix
-            reduced_redundancy=self.context.config.get('S3_STORAGE_RRS', '')   #TODO: fix config prefix
+        file_key.set_contents_from_string(
+            bytes,
+            encrypt_key=self.context.config.get('S3_STORAGE_SSE', ''),         # TODO: fix config prefix
+            reduced_redundancy=self.context.config.get('S3_STORAGE_RRS', '')   # TODO: fix config prefix
         )
 
     def get(self, path):
@@ -91,7 +93,7 @@ class AwsStorage():
 
         return self.utc_to_local(parse_ts(file_key.last_modified))
 
-    def utc_to_local(self,utc_dt):
+    def utc_to_local(self, utc_dt):
         # get integer timestamp to avoid precision lost
         timestamp = calendar.timegm(utc_dt.timetuple())
         local_dt = datetime.fromtimestamp(timestamp)

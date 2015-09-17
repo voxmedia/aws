@@ -4,7 +4,7 @@
 # thumbor imaging service
 # https://github.com/globocom/thumbor/wiki
 
-# Licensed under the MIT license: 
+# Licensed under the MIT license:
 # http://www.opensource.org/licenses/mit-license
 # Copyright (c) 2011 globo.com timehome@corp.globo.com
 
@@ -20,10 +20,12 @@ IMAGE_PATH = join(abspath(dirname(__file__)), 'image.jpg')
 with open(IMAGE_PATH, 'r') as img:
     IMAGE_BYTES = img.read()
 
+
 def get_server(key=None):
     server_params = ServerParameters(8888, 'localhost', 'thumbor.conf', None, 'info', None)
     server_params.security_key = key
     return server_params
+
 
 def get_context(server=None, config=None, importer=None):
     if not server:
