@@ -15,7 +15,7 @@ Installation
 Origin story
 ------------
 
-This is a fork of https://github.com/willtrking/thumbor_aws ; as this repository was not maintained anymore, 
+This is a fork of https://github.com/willtrking/thumbor_aws ; as this repository was not maintained anymore,
 we decided to maintain it under the ``thumbor-community`` organisation.
 
 Features
@@ -55,6 +55,8 @@ Additional Configuration values used:
 
     RESULT_STORAGE_BUCKET = 'thumbor-images'
     RESULT_STORAGE_AWS_STORAGE_ROOT_PATH = 'result'
+    # It stores metadata like content-type on the result object
+    RESULT_STORAGE_S3_STORE_METADATA = False
 
     STORAGE_EXPIRATION_SECONDS
 
