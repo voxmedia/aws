@@ -8,6 +8,7 @@ from thumbor.storages import BaseStorage
 
 from ..aws.storage import AwsStorage
 
+
 class Storage(AwsStorage, BaseStorage):
 
     def __init__(self, context):
@@ -82,5 +83,5 @@ class Storage(AwsStorage, BaseStorage):
 
         return True
 
-    def resolve_original_photo_path(self,filename):
+    def resolve_original_photo_path(self, filename):
         return filename

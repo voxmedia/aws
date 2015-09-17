@@ -9,6 +9,7 @@ import thumbor.loaders.http_loader as http_loader
 
 from tc_aws.aws.connection import get_connection
 
+
 def _get_bucket(url, root_path=None):
     """
     Returns a tuple containing bucket name and bucket path.
