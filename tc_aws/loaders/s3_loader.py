@@ -3,58 +3,22 @@
 from boto.s3.bucket import Bucket
 from thumbor.utils import logger
 from tornado.concurrent import return_future
-import urllib2
 
 import thumbor.loaders.http_loader as http_loader
 
+from tc_aws.loaders import *
 from tc_aws.aws.connection import get_connection
-
-
-def _get_bucket(url, root_path=None):
-    """
-    Returns a tuple containing bucket name and bucket path.
-    url: A string of the format /bucket.name/file/path/in/bucket
-    """
-
-    url_by_piece = url.lstrip("/").split("/")
-    bucket_name = url_by_piece[0]
-
-    if root_path is not None:
-        url_by_piece[0] = root_path
-    else:
-        url_by_piece = url_by_piece[1:]
-
-    bucket_path = "/".join(url_by_piece)
-
-    return bucket_name, bucket_path
-
-
-def _normalize_url(url):
-    """
-    :param url:
-    :return: exactly the same url since we only use http loader if url stars with http prefix.
-    """
-    return url
-
-
-def _validate_bucket(context, bucket):
-    allowed_buckets = context.config.get('S3_ALLOWED_BUCKETS', default=None)
-    return not allowed_buckets or bucket in allowed_buckets
 
 
 @return_future
 def load(context, url, callback):
-    enable_http_loader = context.config.get('AWS_ENABLE_HTTP_LOADER', default=False)
+    load_sync(context, url, callback)
 
-    if enable_http_loader and url.startswith('http'):
+def load_sync(context, url, callback):
+    if _use_http_loader(context, url):
         return http_loader.load_sync(context, url, callback, normalize_url_func=_normalize_url)
 
-    url = urllib2.unquote(url)
-
-    bucket = context.config.get('S3_LOADER_BUCKET', default=None)
-
-    if not bucket:
-        bucket, url = _get_bucket(url, root_path=context.config.S3_LOADER_ROOT_PATH)
+    bucket, key = _get_bucket_and_key(context, url)
 
     if _validate_bucket(context, bucket):
         bucket_loader = Bucket(

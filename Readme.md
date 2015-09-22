@@ -22,6 +22,7 @@ Features
 --------
 
  * tc_aws.loaders.s3_loader
+ * tc_aws.loaders.presigning_loader
  * tc_aws.result_storages.s3_storage
  * tc_aws.storages.s3_storage
 
