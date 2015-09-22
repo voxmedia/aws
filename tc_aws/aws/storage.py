@@ -40,7 +40,7 @@ class AwsStorage():
         file_key.key = abspath
 
         if self.config_prefix is 'RESULT_STORAGE' and self._get_config('S3_STORE_METADATA'):
-            for k, v in self.context.request_handler._headers.iteritems():
+            for k, v in self.context.headers.iteritems():
                 file_key.set_metadata(k, v)
 
         file_key.set_contents_from_string(
