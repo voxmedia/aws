@@ -19,10 +19,6 @@ class Request(object):
     url = None
 
 
-class RequestHandler(object):
-    _headers = {'Content-Type': 'image/webp', 'Some-Other-Header': 'doge-header'}
-
-
 @Vows.batch
 class S3ResultStorageVows(Vows.Context):
 
@@ -76,7 +72,7 @@ class S3ResultStorageVows(Vows.Context):
 
             config = Config(RESULT_STORAGE_BUCKET=s3_bucket, RESULT_STORAGE_S3_STORE_METADATA=True)
             ctx = Context(config=config, server=get_server('ACME-SEC'))
-            ctx.request_handler = RequestHandler()
+            ctx.headers = {'Content-Type': 'image/webp', 'Some-Other-Header': 'doge-header'}
             ctx.request = Request
             ctx.request.url = 'my-image-meta.jpg'
 
