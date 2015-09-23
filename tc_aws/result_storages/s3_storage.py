@@ -18,6 +18,6 @@ class Storage(AwsStorage, BaseStorage):
 
     def get(self, path=None):
         if path is None:
-            path = self.normalize_path(self.context.request.url)
+            path = self.context.request.url
 
         return super(Storage, self).get(path)
