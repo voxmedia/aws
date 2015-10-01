@@ -1,5 +1,5 @@
 # coding: utf-8
-__all__ = ['_get_bucket_and_key', '_get_bucket', '_normalize_url', '_validate_bucket', '_use_http_loader']
+__all__ = ['_get_bucket_and_key', '_get_bucket', '_get_key', '_normalize_url', '_validate_bucket', '_use_http_loader']
 
 import urllib2
 
@@ -7,28 +7,25 @@ import urllib2
 def _get_bucket_and_key(context, url):
     url = urllib2.unquote(url)
 
-    bucket = context.config.get('S3_LOADER_BUCKET', default=None)
+    bucket = context.config.get('S3_LOADER_BUCKET')
+    if bucket is None:
+        bucket = _get_bucket(url)
+        url = '/'.join(url.lstrip('/').split('/')[1:])
 
-    if not bucket:
-        bucket, key = _get_bucket(url, root_path=context.config.S3_LOADER_ROOT_PATH)
-    else:
-        key = url
+    key = _get_key(url, context)
 
     return bucket, key
 
 
-def _get_bucket(url, root_path=None):
+def _get_bucket(url):
     url_by_piece = url.lstrip("/").split("/")
-    bucket_name = url_by_piece[0]
 
-    if root_path is not None:
-        url_by_piece[0] = root_path
-    else:
-        url_by_piece = url_by_piece[1:]
+    return url_by_piece[0]
 
-    bucket_path = "/".join(url_by_piece)
 
-    return bucket_name, bucket_path
+def _get_key(path, context):
+    root_path = context.config.get('S3_LOADER_ROOT_PATH')
+    return '/'.join([root_path, path]) if root_path is not '' else path
 
 
 def _normalize_url(url):

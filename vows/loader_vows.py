@@ -7,12 +7,7 @@ from pyvows import Vows, expect
 from thumbor.context import Context
 from derpconf.config import Config
 
-import boto
-from boto.s3.key import Key
-
-from moto import mock_s3
-
-from fixtures.storage_fixture import IMAGE_PATH, IMAGE_BYTES
+from fixtures.storage_fixture import IMAGE_PATH
 
 from tc_aws.loaders import *
 
@@ -34,7 +29,7 @@ class S3LoaderVows(Vows.Context):
             path = 'some-bucket/some/image/path.jpg'
             bucket, key = _get_bucket_and_key(topic, path)
             expect(bucket).to_equal('some-bucket')
-            expect(key).to_equal('/some/image/path.jpg')
+            expect(key).to_equal('some/image/path.jpg')
 
     class CanDetectBucket(Vows.Context):
 
@@ -42,8 +37,19 @@ class S3LoaderVows(Vows.Context):
             return _get_bucket('/'.join([s3_bucket, IMAGE_PATH]))
 
         def should_detect_bucket(self, topic):
-            expect(topic[0]).to_equal(s3_bucket)
-            expect(topic[1]).to_equal(IMAGE_PATH)
+            expect(topic).to_equal(s3_bucket)
+
+    class CanDetectKey(Vows.Context):
+
+        def topic(self):
+            conf = Config()
+            conf.S3_LOADER_BUCKET = None
+            conf.S3_LOADER_ROOT_PATH = ''
+            context = Context(config=conf)
+            return _get_key(IMAGE_PATH, context)
+
+        def should_detect_key(self, topic):
+            expect(topic).to_equal(IMAGE_PATH)
 
     class CanNormalize(Vows.Context):
 
