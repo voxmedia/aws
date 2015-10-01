@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='tc_aws',
-    version='1.3.1',
+    version='1.3.2',
     description='Thumbor AWS extensions',
     author='Thumbor-Community & William King',
     author_email='willtrking@gmail.com',
