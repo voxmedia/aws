@@ -81,6 +81,7 @@ Additional Configuration values used:
     # Optional additional configuration for the Boto-Client used to access S3.
     # see http://boto.readthedocs.org/en/latest/ref/s3.html?highlight=boto.s3.connection.s3connection#boto.s3.connection.S3Connection
     # for all available config options
+    # Hint: If you are using S3 Frankfurt, you have to set the host to "s3.eu-central-1.amazonaws.com".
     BOTO_CONFIG = {
         'host': 'fakes3.local.dev',
         'is_secure': False
