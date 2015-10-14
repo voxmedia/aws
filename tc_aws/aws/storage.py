@@ -1,101 +1,268 @@
 # coding: utf-8
 
-import calendar
+# Copyright (c) 2015, thumbor-community
+# Use of this source code is governed by the MIT license that can be
+# found in the LICENSE file.
 
-from os.path import join
+from json import loads, dumps
+from os.path import join, splitext
+from datetime import datetime
+from dateutil.tz import tzutc
 
-from datetime import datetime, timedelta
-
+from tornado.concurrent import return_future
 from thumbor.utils import logger
 
-from boto.s3.bucket import Bucket
-from boto.s3.key import Key
-from dateutil.parser import parse as parse_ts
-
-from connection import get_connection
-
+from .bucket import Bucket
 
 class AwsStorage():
-
+    """
+    Base storage class
+    """
     @property
     def is_auto_webp(self):
+        """
+        Determines based on context whether we automatically use webp or not
+        :return: Use WebP?
+        :rtype: bool
+        """
         return self.context.config.AUTO_WEBP and self.context.request.accepts_webp
 
+    @property
+    def storage(self):
+        """
+        Instantiates bucket based on configuration
+        :return: The bucket
+        :rtype: Bucket
+        """
+        return Bucket(self._get_config('BUCKET'), self.context.config.get('TC_AWS_REGION'))
+
     def __init__(self, context, config_prefix):
+        """
+        Constructor
+        :param Context context: An instance of thumbor's context
+        :param string config_prefix: Prefix used to load configuration values
+        """
         self.config_prefix = config_prefix
         self.context = context
-        self.storage = self.__get_s3_bucket()
 
-    def _get_config(self, config_key, default=None):
-        return getattr(self.context.config, '%s_%s' % (self.config_prefix, config_key))
+    @return_future
+    def get(self, path, callback):
+        """
+        Gets data at path
+        :param string path: Path for data
+        :param callable callback: Callback function for once the retrieval is done
+        """
+        file_abspath = self._normalize_path(path)
 
-    def __get_s3_bucket(self):
-        return Bucket(
-            connection=get_connection(self.context),
-            name=self._get_config('BUCKET')
-        )
+        def return_data(file_key):
+            if not file_key or self._get_error(file_key) or self.is_expired(file_key):
+                logger.warn("[AwsStorage] s3 key not found at %s" % file_abspath)
+                callback(None)
+            else:
+                callback(file_key['Body'].read())
+
+        self.storage.get(file_abspath, callback=return_data)
 
     def set(self, bytes, abspath):
-        file_key = Key(self.storage)
-        file_key.key = abspath
+        """
+        Stores data at given path
+        :param bytes bytes: Data to store
+        :param string abspath: Path to store the data at
+        :return: Path where the data is stored
+        :rtype: string
+        """
+        metadata = {}
 
-        if self.config_prefix is 'RESULT_STORAGE' and self._get_config('S3_STORE_METADATA'):
-            for k, v in self.context.headers.iteritems():
-                file_key.set_metadata(k, v)
+        if self.config_prefix is 'TC_AWS_RESULT_STORAGE' and self.context.config.get('TC_AWS_STORE_METADATA'):
+            metadata = self.context.headers
 
-        file_key.set_contents_from_string(
+        self.storage.put(
+            abspath,
             bytes,
-            encrypt_key=self.context.config.get('S3_STORAGE_SSE', ''),         # TODO: fix config prefix
-            reduced_redundancy=self.context.config.get('S3_STORAGE_RRS', '')   # TODO: fix config prefix
+            metadata=metadata,
+            reduced_redundancy=self.context.config.get('TC_AWS_STORAGE_RRS', False),
+            encrypt_key=self.context.config.get('TC_AWS_STORAGE_SSE', False),
+            callback=self._handle_error,
         )
 
-    def get(self, path):
-        file_abspath = self.normalize_path(path)
+        return abspath
 
-        file_key = self.storage.get_key(file_abspath)
+    def remove(self, path):
+        """
+        Deletes data at path
+        :param string path: Path to delete
+        :return: Whether deletion is successful or not
+        :rtype: bool
+        """
+        yield self.storage.delete(path)
+        return
 
-        if not file_key or self.is_expired(file_key):
-            logger.debug("[STORAGE] s3 key not found at %s" % file_abspath)
-            return None
-        return file_key.read()
+    @return_future
+    def exists(self, path, callback):
+        """
+        Tells if data exists at given path
+        :param string path: Path to check
+        :param callable callback: Callback function for once the check is done
+        """
+        file_abspath = self._normalize_path(path)
 
-    def normalize_path(self, path):
-        path = path.lstrip('/')  # Remove leading '/'
-        path_segments = [self._get_config('AWS_STORAGE_ROOT_PATH'), path]
+        def return_data(file_key):
+            if not file_key or self._get_error(file_key):
+                callback(False)
+            else:
+                callback(True)
 
-        if self.is_auto_webp:
-            path_segments.append("webp")
-
-        return join(*path_segments)
+        self.storage.get(file_abspath, callback=return_data)
 
     def is_expired(self, key):
-        if key:
-            expire_in_seconds = self._get_config('EXPIRATION_SECONDS')
+        """
+        Tells whether key has expired
+        :param string key: Path to check
+        :return: Whether it is expired or not
+        :rtype: bool
+        """
+        if key and not self._get_error(key):
+            expire_in_seconds = self.context.config.get('STORAGE_EXPIRATION_SECONDS', 3600)
 
             # Never expire
             if expire_in_seconds is None or expire_in_seconds == 0:
                 return False
 
-            timediff = datetime.now() - self.utc_to_local(parse_ts(key.last_modified))
-            return timediff.seconds > self._get_config('EXPIRATION_SECONDS')
+            timediff = datetime.now(tzutc()) - key['LastModified']
+
+            return timediff.seconds > self.context.config.get('STORAGE_EXPIRATION_SECONDS', 3600)
         else:
             #If our key is bad just say we're expired
             return True
 
-    def last_updated(self):
+    @return_future
+    def last_updated(self, callback):
+        """
+        Tells when the image has last been updated
+        :param callable callback: Callback function for once the retrieval is done
+        """
         path = self.context.request.url
-        file_abspath = self.normalize_path(path)
-        file_key = self.storage.get_key(file_abspath)
+        file_abspath = self._normalize_path(path)
 
-        if not file_key or self.is_expired(file_key):
-            logger.debug("[RESULT_STORAGE] s3 key not found at %s" % file_abspath)
-            return None
+        def on_file_fetched(file):
+            if not file or self._get_error(file) or self.is_expired(file):
+                logger.warn("[AwsStorage] s3 key not found at %s" % file_abspath)
+                callback(None)
+            else:
+                callback(file['LastModified'])
 
-        return self.utc_to_local(parse_ts(file_key.last_modified))
+        self.storage.get(file_abspath, callback=on_file_fetched)
 
-    def utc_to_local(self, utc_dt):
-        # get integer timestamp to avoid precision lost
-        timestamp = calendar.timegm(utc_dt.timetuple())
-        local_dt = datetime.fromtimestamp(timestamp)
-        assert utc_dt.resolution >= timedelta(microseconds=1)
-        return local_dt.replace(microsecond=utc_dt.microsecond)
+    @return_future
+    def get_crypto(self, path, callback):
+        """
+        Retrieves crypto data at path
+        :param string path: Path to search for crypto data
+        :param callable callback: Callback function for once the retrieval is done
+        """
+        file_abspath = self._normalize_path(path)
+        crypto_path = "%s.txt" % (splitext(file_abspath)[0])
+
+        def return_data(file_key):
+            if not file_key or self._get_error(file_key) or self.is_expired(file_key):
+                logger.warn("[STORAGE] s3 key not found at %s" % crypto_path)
+                callback(None)
+            else:
+                callback(file_key['Body'])
+
+        self.storage.get(crypto_path, callback=return_data)
+
+    def put_crypto(self, path):
+        """
+        Stores crypto data at given path
+        :param string path: Path to store the data at
+        :return: Path where the crypto data is stored
+        """
+        if not self.context.config.STORES_CRYPTO_KEY_FOR_EACH_IMAGE:
+            return
+
+        if not self.context.server.security_key:
+            raise RuntimeError("STORES_CRYPTO_KEY_FOR_EACH_IMAGE can't be True if no SECURITY_KEY specified")
+
+        file_abspath = self._normalize_path(path)
+        crypto_path = '%s.txt' % splitext(file_abspath)[0]
+
+        self.set(self.context.server.security_key, crypto_path)
+
+        return crypto_path
+
+    @return_future
+    def get_detector_data(self, path, callback):
+        """
+        Retrieves detector data from storage
+        :param string path: Path where the data is stored
+        :param callable callback: Callback function for once the retrieval is done
+        """
+        file_abspath = self._normalize_path(path)
+        path = '%s.detectors.txt' % splitext(file_abspath)[0]
+
+        def return_data(file_key):
+            if not file_key or self._get_error(file_key) or self.is_expired(file_key):
+                logger.warn("[AwsStorage] s3 key not found at %s" % path)
+                callback(None)
+            else:
+                callback(loads(file_key['Body'].read()))
+
+        self.storage.get(path, callback=return_data)
+
+    def put_detector_data(self, path, data):
+        """
+        Stores detector data at given path
+        :param string path: Path to store the data at
+        :param bytes data:  Data to store
+        :return: Path where the data is stored
+        :rtype: string
+        """
+        file_abspath = self._normalize_path(path)
+
+        path = '%s.detectors.txt' % splitext(file_abspath)[0]
+
+        self.set(dumps(data), path)
+
+        return path
+
+    def _get_error(self, response):
+        """
+        Returns error in response if it exists
+        :param dict response: AWS Response
+        :return: Error message if present, None otherwise
+        :rtype: string
+        """
+        return response['Error']['Message'] if 'Error' in response else None
+
+    def _handle_error(self, response):
+        """
+        Logs error if necessary
+        :param dict response: AWS Response
+        """
+        if self._get_error(response):
+            logger.warn("[STORAGE] error occured while storing data: %s" % self._get_error(response))
+
+    def _get_config(self, config_key, default=None):
+        """
+        Retrieve specific config based on prefix
+        :param string config_key: Requested config
+        :param default: Default value if not found
+        :return: Resolved config value
+        """
+        return getattr(self.context.config, '%s_%s' % (self.config_prefix, config_key))
+
+    def _normalize_path(self, path):
+        """
+        Adapts path based on configuration (root_path for instance)
+        :param string path: Path to adapt
+        :return: Adapted path
+        :rtype: string
+        """
+        path = path.lstrip('/')  # Remove leading '/'
+        path_segments = [self._get_config('ROOT_PATH'), path]
+
+        if self.is_auto_webp:
+            path_segments.append("webp")
+
+        return join(*path_segments).lstrip('/')

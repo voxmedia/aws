@@ -17,8 +17,10 @@ from fixtures.storage_fixture import IMAGE_PATH, IMAGE_BYTES
 
 from tc_aws.loaders import s3_loader
 
-s3_bucket = 'thumbor-images-test'
+import logging
+logging.getLogger('botocore').setLevel(logging.CRITICAL)
 
+s3_bucket = 'thumbor-images-test'
 
 @Vows.batch
 class S3LoaderVows(Vows.Context):
@@ -35,8 +37,8 @@ class S3LoaderVows(Vows.Context):
             k.set_contents_from_string(IMAGE_BYTES)
 
             conf = Config()
-            conf.define('S3_LOADER_BUCKET', s3_bucket, '')
-            conf.define('S3_LOADER_ROOT_PATH', 'root_path', '')
+            conf.define('TC_AWS_LOADER_BUCKET', s3_bucket, '')
+            conf.define('TC_AWS_LOADER_ROOT_PATH', 'root_path', '')
 
             context = Context(config=conf)
 
@@ -51,7 +53,7 @@ class S3LoaderVows(Vows.Context):
         @mock_s3
         def topic(self, callback):
             conf = Config()
-            conf.define('S3_ALLOWED_BUCKETS', [], '')
+            conf.define('TC_AWS_ALLOWED_BUCKETS', [], '')
 
             context = Context(config=conf)
             s3_loader.load(context, '/'.join([s3_bucket, IMAGE_PATH]), callback)
@@ -64,7 +66,7 @@ class S3LoaderVows(Vows.Context):
 
         def topic(self):
             conf = Config()
-            conf.define('AWS_ENABLE_HTTP_LOADER', True, '')
+            conf.define('TC_AWS_ENABLE_HTTP_LOADER', True, '')
 
             return Context(config=conf)
 
@@ -73,7 +75,7 @@ class S3LoaderVows(Vows.Context):
             def callback(*args):
                 pass
 
-            s3_loader.load_sync(topic, 'http://foo.bar', callback)
+            s3_loader.load(topic, 'http://foo.bar', callback)
             expect(load_sync_patch.called).to_be_true()
 
         @mock_s3
@@ -82,5 +84,5 @@ class S3LoaderVows(Vows.Context):
             def callback(*args):
                 pass
 
-            s3_loader.load_sync(topic, 'foo.bar', callback)
+            s3_loader.load(topic, 'foo.bar', callback)
             expect(load_sync_patch.called).to_be_false()

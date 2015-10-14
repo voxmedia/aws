@@ -20,6 +20,9 @@ from fixtures.storage_fixture import IMAGE_PATH, IMAGE_BYTES
 
 from tc_aws.loaders import presigning_loader
 
+import logging
+logging.getLogger('botocore').setLevel(logging.CRITICAL)
+
 s3_bucket = 'thumbor-images-test'
 
 @Vows.batch
@@ -37,8 +40,8 @@ class PresigningLoaderVows(Vows.Context):
             k.set_contents_from_string(IMAGE_BYTES)
 
             conf = Config()
-            conf.define('S3_LOADER_BUCKET', s3_bucket, '')
-            conf.define('S3_LOADER_ROOT_PATH', 'root_path', '')
+            conf.define('TC_AWS_LOADER_BUCKET', s3_bucket, '')
+            conf.define('TC_AWS_LOADER_ROOT_PATH', 'root_path', '')
 
             return Context(config=conf)
 
@@ -51,7 +54,7 @@ class PresigningLoaderVows(Vows.Context):
         @mock_s3
         def topic(self):
             conf = Config()
-            conf.define('S3_ALLOWED_BUCKETS', [], '')
+            conf.define('TC_AWS_ALLOWED_BUCKETS', [], '')
 
             return Context(config=conf)
 
@@ -64,7 +67,7 @@ class PresigningLoaderVows(Vows.Context):
         @mock_s3
         def topic(self):
             conf = Config()
-            conf.define('AWS_ENABLE_HTTP_LOADER', True, '')
+            conf.define('TC_AWS_ENABLE_HTTP_LOADER', True, '')
 
             return Context(config=conf)
 
@@ -73,20 +76,20 @@ class PresigningLoaderVows(Vows.Context):
             def callback(*args):
                 pass
 
-            presigning_loader.load_sync(topic, 'http://foo.bar', callback)
+            presigning_loader.load(topic, 'http://foo.bar', callback)
             expect(load_sync_patch.called).to_be_true()
 
     class CanBuildPresignedUrl(Vows.Context):
 
-        def topic(self):
-            conf = Config()
-            return Context(config=conf)
-
+        @Vows.async_topic
         @mock_s3
+        def topic(self, callback):
+            conf = Config()
+            context = Context(config=conf)
+            presigning_loader._generate_presigned_url(context, "bucket-name", "some-s3-key", callback)
+
         def should_generate_presigned_urls(self, topic):
-            url = presigning_loader._generate_presigned_url(
-                topic, "bucket-name", "some-s3-key")
-            url = urlparse(url)
+            url = urlparse(topic.args[0])
             expect(url.scheme).to_equal('https')
             expect(url.hostname).to_equal('bucket-name.s3.amazonaws.com')
             expect(url.path).to_equal('/some-s3-key')

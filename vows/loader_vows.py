@@ -11,8 +11,10 @@ from fixtures.storage_fixture import IMAGE_PATH
 
 from tc_aws.loaders import *
 
-s3_bucket = 'thumbor-images-test'
+import logging
+logging.getLogger('botocore').setLevel(logging.CRITICAL)
 
+s3_bucket = 'thumbor-images-test'
 
 @Vows.batch
 class S3LoaderVows(Vows.Context):
@@ -21,8 +23,8 @@ class S3LoaderVows(Vows.Context):
 
         def topic(self):
             conf = Config()
-            conf.S3_LOADER_BUCKET = None
-            conf.S3_LOADER_ROOT_PATH = ''
+            conf.TC_AWS_LOADER_BUCKET = None
+            conf.TC_AWS_LOADER_ROOT_PATH = ''
             return Context(config=conf)
 
         def should_detect_bucket_and_key(self, topic):
@@ -43,8 +45,8 @@ class S3LoaderVows(Vows.Context):
 
         def topic(self):
             conf = Config()
-            conf.S3_LOADER_BUCKET = None
-            conf.S3_LOADER_ROOT_PATH = ''
+            conf.TC_AWS_LOADER_BUCKET = None
+            conf.TC_AWS_LOADER_ROOT_PATH = ''
             context = Context(config=conf)
             return _get_key(IMAGE_PATH, context)
 
