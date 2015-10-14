@@ -45,13 +45,14 @@ class Storage(AwsStorage, BaseStorage):
             path = self.context.request.url
 
         def return_result(key):
-            result = ResultStorageResult
+            result = ResultStorageResult()
             if self._get_error(key):
                 result.error = self._get_error(key)
             else:
                 result.buffer     = key['Body'].read()
                 result.successful = True
-                result.metadata   = key.copy().pop('Body')
+                result.metadata   = key.copy()
+                result.metadata.pop('Body')
 
             callback(result)
 
