@@ -4,6 +4,8 @@
 # Use of this source code is governed by the MIT license that can be
 # found in the LICENSE file.
 
+from tornado.concurrent import return_future
+
 from thumbor.storages import BaseStorage
 
 from ..aws.storage import AwsStorage
@@ -31,6 +33,20 @@ class Storage(AwsStorage, BaseStorage):
         self.set(bytes, self._normalize_path(path))
 
         return path
+
+    @return_future
+    def get(self, path, callback):
+        """
+        Gets data at path
+        :param string path: Path for data
+        :param callable callback: Callback function for once the retrieval is done
+        """
+
+        def parse_body(key):
+            callback(key['Body'].read())
+
+        super(Storage, self).get(path, callback=parse_body)
+
 
     def resolve_original_photo_path(self, filename):
         """

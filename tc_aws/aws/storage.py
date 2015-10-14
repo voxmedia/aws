@@ -59,7 +59,7 @@ class AwsStorage():
                 logger.warn("[AwsStorage] s3 key not found at %s" % file_abspath)
                 callback(None)
             else:
-                callback(file_key['Body'].read())
+                callback(file_key)
 
         self.storage.get(file_abspath, callback=return_data)
 
