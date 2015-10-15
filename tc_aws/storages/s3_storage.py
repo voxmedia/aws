@@ -43,7 +43,10 @@ class Storage(AwsStorage, BaseStorage):
         """
 
         def parse_body(key):
-            callback(key['Body'].read())
+            if key is None or self._get_error(key):
+                callback(None)
+            else:
+                callback(key['Body'].read())
 
         super(Storage, self).get(path, callback=parse_body)
 

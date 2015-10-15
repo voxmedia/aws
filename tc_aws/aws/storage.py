@@ -54,14 +54,7 @@ class AwsStorage():
         """
         file_abspath = self._normalize_path(path)
 
-        def return_data(file_key):
-            if not file_key or self._get_error(file_key) or self.is_expired(file_key):
-                logger.warn("[AwsStorage] s3 key not found at %s" % file_abspath)
-                callback(None)
-            else:
-                callback(file_key)
-
-        self.storage.get(file_abspath, callback=return_data)
+        self.storage.get(file_abspath, callback=callback)
 
     def set(self, bytes, abspath):
         """
@@ -233,7 +226,10 @@ class AwsStorage():
         :return: Error message if present, None otherwise
         :rtype: string
         """
-        return response['Error']['Message'] if 'Error' in response else None
+        if 'Error' in response:
+            return response['Error']['Message'] if 'Message' in response['Error'] else response['Error']
+        return None
+        # return response['Error']['Message'] if ('Error' in response and 'Message' in response['Error']) else None
 
     def _handle_error(self, response):
         """

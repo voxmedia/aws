@@ -45,15 +45,15 @@ class Storage(AwsStorage, BaseStorage):
             path = self.context.request.url
 
         def return_result(key):
-            result = ResultStorageResult()
-            if self._get_error(key):
-                result.error = self._get_error(key)
+            if key is None or self._get_error(key) or self.is_expired(key):
+                callback(None)
             else:
+                result = ResultStorageResult()
                 result.buffer     = key['Body'].read()
                 result.successful = True
                 result.metadata   = key.copy()
                 result.metadata.pop('Body')
+                callback(result)
 
-            callback(result)
 
         super(Storage, self).get(path, callback=return_result)
