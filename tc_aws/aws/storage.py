@@ -4,9 +4,11 @@
 # Use of this source code is governed by the MIT license that can be
 # found in the LICENSE file.
 
+import calendar
+
 from json import loads, dumps
 from os.path import join, splitext
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.tz import tzutc
 
 from tornado.concurrent import return_future
@@ -142,7 +144,7 @@ class AwsStorage():
                 logger.warn("[AwsStorage] s3 key not found at %s" % file_abspath)
                 callback(None)
             else:
-                callback(file['LastModified'])
+                callback(self._utc_to_local(file['LastModified']))
 
         self.storage.get(file_abspath, callback=on_file_fetched)
 
@@ -219,6 +221,20 @@ class AwsStorage():
 
         return path
 
+    def _utc_to_local(self, utc_dt):
+        """
+        Converts utc datetime to local datetime
+        :param datetime utc_dt:
+        :return: Local datetime
+        :rtype datetime:
+        """
+        # get integer timestamp to avoid precision lost
+        timestamp = calendar.timegm(utc_dt.timetuple())
+        local_dt  = datetime.fromtimestamp(timestamp)
+
+        assert utc_dt.resolution >= timedelta(microseconds=1)
+        return local_dt.replace(microsecond=utc_dt.microsecond)
+
     def _get_error(self, response):
         """
         Returns error in response if it exists
@@ -256,7 +272,11 @@ class AwsStorage():
         :rtype: string
         """
         path = path.lstrip('/')  # Remove leading '/'
-        path_segments = [self._get_config('ROOT_PATH'), path]
+        path_segments = [path]
+
+        root_path = self._get_config('ROOT_PATH')
+        if root_path and root_path is not None and root_path is not '':
+            path_segments.insert(0, root_path)
 
         if self.is_auto_webp:
             path_segments.append("webp")

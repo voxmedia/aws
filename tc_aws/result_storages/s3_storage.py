@@ -9,6 +9,8 @@ from thumbor.result_storages import BaseStorage, ResultStorageResult
 
 from ..aws.storage import AwsStorage
 
+from thumbor.utils import logger
+
 class Storage(AwsStorage, BaseStorage):
     """
     S3 Result Storage
@@ -53,7 +55,10 @@ class Storage(AwsStorage, BaseStorage):
                 result.successful = True
                 result.metadata   = key.copy()
                 result.metadata.pop('Body')
-                callback(result)
+                result.metadata['LastModified'] = self._utc_to_local(result.metadata['LastModified'])
 
+                logger.debug(str(result.metadata))
+
+                callback(result)
 
         super(Storage, self).get(path, callback=return_result)
