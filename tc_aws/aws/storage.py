@@ -123,6 +123,9 @@ class AwsStorage():
             if expire_in_seconds is None or expire_in_seconds == 0:
                 return False
 
+            if 'LastModified' not in key:
+                return True
+
             timediff = datetime.now(tzutc()) - key['LastModified']
 
             return timediff.seconds > self.context.config.get('STORAGE_EXPIRATION_SECONDS', 3600)
@@ -244,8 +247,11 @@ class AwsStorage():
         """
         if 'Error' in response:
             return response['Error']['Message'] if 'Message' in response['Error'] else response['Error']
+
+        if 'Body' not in response or 'LastModified' not in response:
+            return 'Incomplete response from server'
+
         return None
-        # return response['Error']['Message'] if ('Error' in response and 'Message' in response['Error']) else None
 
     def _handle_error(self, response):
         """
