@@ -27,7 +27,7 @@ class AwsStorage():
         :return: Use WebP?
         :rtype: bool
         """
-        return self.context.config.AUTO_WEBP and self.context.request.accepts_webp
+        return self.context.config.AUTO_WEBP # and self.context.request.accepts_webp
 
     @property
     def storage(self):
