@@ -168,6 +168,15 @@ class S3StorageVows(Vows.Context):
         def should_return_the_same(self, topic):
             expect(topic).to_equal("tata/toto")
 
+    class ShouldNormalize(Vows.Context):
+        def topic(self):
+            config = Config(TC_AWS_STORAGE_ROOT_PATH='')
+            return Storage(Context(config=config))
+
+        def should_normalize_slash(self, topic):
+            expect(topic._normalize_path('/test')).to_equal('test')
+            expect(topic._normalize_path('/test/image.png')).to_equal('test/image.png')
+
     class CryptoVows(Vows.Context):
         class RaisesIfInvalidConfig(Vows.Context):
             @Vows.capture_error

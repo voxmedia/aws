@@ -278,10 +278,10 @@ class AwsStorage():
         path_segments = [path]
 
         root_path = self._get_config('ROOT_PATH')
-        if root_path and root_path is not None and root_path is not '':
+        if root_path and root_path is not '':
             path_segments.insert(0, root_path)
 
         if self.is_auto_webp:
             path_segments.append("webp")
 
-        return join(*path_segments).lstrip('/')
+        return join(path_segments[0], *path_segments[1:]).lstrip('/') if len(path_segments) > 1 else path_segments[0]
