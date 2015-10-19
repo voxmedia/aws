@@ -43,7 +43,7 @@ class Storage(AwsStorage, BaseStorage):
         """
 
         def parse_body(key):
-            if key is None or self._get_error(key):
+            if key is None or self._get_error(key) is not None:
                 callback(None)
             else:
                 callback(key['Body'].read())

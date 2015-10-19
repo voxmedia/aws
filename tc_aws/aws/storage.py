@@ -123,9 +123,6 @@ class AwsStorage():
             if expire_in_seconds is None or expire_in_seconds == 0:
                 return False
 
-            if 'LastModified' not in key:
-                return True
-
             timediff = datetime.now(tzutc()) - key['LastModified']
 
             return timediff.seconds > self.context.config.get('STORAGE_EXPIRATION_SECONDS', 3600)
