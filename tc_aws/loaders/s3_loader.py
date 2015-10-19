@@ -1,73 +1,40 @@
 # coding: utf-8
 
-from boto.s3.bucket import Bucket
+# Copyright (c) 2015, thumbor-community
+# Use of this source code is governed by the MIT license that can be
+# found in the LICENSE file.
+
 from thumbor.utils import logger
 from tornado.concurrent import return_future
-import urllib2
 
 import thumbor.loaders.http_loader as http_loader
 
-from tc_aws.aws.connection import get_connection
-
-def _get_bucket(url, root_path=None):
-    """
-    Returns a tuple containing bucket name and bucket path.
-    url: A string of the format /bucket.name/file/path/in/bucket
-    """
-
-    url_by_piece = url.lstrip("/").split("/")
-    bucket_name = url_by_piece[0]
-
-    if root_path is not None:
-        url_by_piece[0] = root_path
-    else:
-        url_by_piece = url_by_piece[1:]
-
-    bucket_path = "/".join(url_by_piece)
-
-    return bucket_name, bucket_path
-
-
-def _normalize_url(url):
-    """
-    :param url:
-    :return: exactly the same url since we only use http loader if url stars with http prefix.
-    """
-    return url
-
-
-def _validate_bucket(context, bucket):
-    allowed_buckets = context.config.get('S3_ALLOWED_BUCKETS', default=None)
-    return not allowed_buckets or bucket in allowed_buckets
-
+from . import *
+from ..aws.bucket import Bucket
 
 @return_future
 def load(context, url, callback):
-    enable_http_loader = context.config.get('AWS_ENABLE_HTTP_LOADER', default=False)
+    """
+    Loads image
+    :param Context context: Thumbor's context
+    :param string url: Path to load
+    :param callable callback: Callback method once done
+    """
+    if _use_http_loader(context, url):
+        http_loader.load_sync(context, url, callback, normalize_url_func=_normalize_url)
+        return
 
-    if enable_http_loader and url.startswith('http'):
-        return http_loader.load_sync(context, url, callback, normalize_url_func=_normalize_url)
-
-    url = urllib2.unquote(url)
-
-    bucket = context.config.get('S3_LOADER_BUCKET', default=None)
-
-    if not bucket:
-        bucket, url = _get_bucket(url, root_path=context.config.S3_LOADER_ROOT_PATH)
+    bucket, key = _get_bucket_and_key(context, url)
 
     if _validate_bucket(context, bucket):
-        bucket_loader = Bucket(
-            connection=get_connection(context),
-            name=bucket
-        )
-        file_key = None
-        try:
-            file_key = bucket_loader.get_key(url)
-        except Exception, e:
-            logger.warn("ERROR retrieving image from S3 {0}: {1}".format(url, str(e)))
+        bucket_loader = Bucket(bucket, context.config.get('TC_AWS_REGION'))
 
-        if file_key:
-            callback(file_key.read())
-            return
+        def handle_data(file_key):
+            if not file_key or 'Error' in file_key:
+                logger.warn("ERROR retrieving image from S3 {0}: {1}".format(key, file_key['Error']['Message']))
+            else:
+                callback(file_key['Body'].read())
 
-    callback(None)
+        bucket_loader.get(key, callback=handle_data)
+    else:
+        callback(None)

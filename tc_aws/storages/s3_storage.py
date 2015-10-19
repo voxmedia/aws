@@ -1,86 +1,61 @@
 #coding: utf-8
 
-from json import loads, dumps
+# Copyright (c) 2015, thumbor-community
+# Use of this source code is governed by the MIT license that can be
+# found in the LICENSE file.
 
-from os.path import splitext
+from tornado.concurrent import return_future
 
 from thumbor.storages import BaseStorage
 
 from ..aws.storage import AwsStorage
 
 class Storage(AwsStorage, BaseStorage):
-
+    """
+    S3 Storage
+    """
     def __init__(self, context):
+        """
+        Constructor
+        :param Context context: Thumbor's context
+        """
         BaseStorage.__init__(self, context)
-        AwsStorage.__init__(self, context, 'STORAGE')
+        AwsStorage.__init__(self, context, 'TC_AWS_STORAGE')
 
     def put(self, path, bytes):
-        self.set(bytes, self.normalize_path(path))
+        """
+        Stores image
+        :param string path: Path to store data at
+        :param bytes bytes: Data to store
+        :return: Path where data is stored
+        :rtype: string
+        """
+        self.set(bytes, self._normalize_path(path))
 
         return path
 
-    def put_crypto(self, path):
-        if not self.context.config.STORES_CRYPTO_KEY_FOR_EACH_IMAGE:
-            return
+    @return_future
+    def get(self, path, callback):
+        """
+        Gets data at path
+        :param string path: Path for data
+        :param callable callback: Callback function for once the retrieval is done
+        """
 
-        if not self.context.server.security_key:
-            raise RuntimeError("STORES_CRYPTO_KEY_FOR_EACH_IMAGE can't be True if no SECURITY_KEY specified")
+        def parse_body(key):
+            if key is None or self._get_error(key) is not None:
+                callback(None)
+            else:
+                callback(key['Body'].read())
 
-        file_abspath = self.normalize_path(path)
-        crypto_path = '%s.txt' % splitext(file_abspath)[0]
+        super(Storage, self).get(path, callback=parse_body)
 
-        self.set(self.context.server.security_key, crypto_path)
 
-        return crypto_path
-
-    def put_detector_data(self, path, data):
-        file_abspath = self.normalize_path(path)
-
-        path = '%s.detectors.txt' % splitext(file_abspath)[0]
-
-        self.set(dumps(data), path)
-
-        return path
-
-    def get_crypto(self, path):
-        file_abspath = self.normalize_path(path)
-        crypto_path = "%s.txt" % (splitext(file_abspath)[0])
-
-        file_key = self.storage.get_key(crypto_path)
-
-        if not file_key:
-            return None
-
-        return file_key.read()
-
-    def get_detector_data(self, path):
-        file_abspath = self.normalize_path(path)
-        path = '%s.detectors.txt' % splitext(file_abspath)[0]
-
-        file_key = self.storage.get_key(path)
-
-        if not file_key or self.is_expired(file_key):
-            return None
-
-        return loads(file_key.read())
-
-    def exists(self, path):
-        file_abspath = self.normalize_path(path)
-        file_key = self.storage.get_key(file_abspath)
-
-        if not file_key:
-            return False
-
-        return True
-
-    def remove(self, path):
-        if not self.exists(path):
-            return
-
-        if not self.storage.delete_key(path):
-            return False
-
-        return True
-
-    def resolve_original_photo_path(self,filename):
+    def resolve_original_photo_path(self, filename):
+        """
+        Determines original path for file
+        :param string filename: File to look at
+        :return: Resolved path (here it is the same)
+        :rtype: string
+        """
         return filename
